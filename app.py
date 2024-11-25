@@ -59,38 +59,7 @@ if uploaded_origin and uploaded_destination:
         st.info("Processing data... This may take a while.")
         progress_bar = st.progress(0)
 
-        # Use a pre-trained model for embedding
-        model = SentenceTransformer('all-MiniLM-L6-v2')
-
-        # Vectorize the combined text
-        origin_embeddings = model.encode(origin_df['combined_text'].tolist(), show_progress_bar=True)
-        destination_embeddings = model.encode(destination_df['combined_text'].tolist(), show_progress_bar=True)
-
-        # Create a FAISS index
-        dimension = origin_embeddings.shape[1]
-        faiss_index = faiss.IndexFlatL2(dimension)
-        faiss_index.add(destination_embeddings.astype('float32'))
-
-        # Perform the search for the nearest neighbors
-        D, I = faiss_index.search(origin_embeddings.astype('float32'), k=1)
-
-        # Calculate similarity scores
-        similarity_scores = 1 - (D / (np.max(D) + 1e-10))  # Add small value to avoid division by zero
-
-        # Create the output DataFrame with similarity scores
-        matches_df = pd.DataFrame({
-            'origin_url': origin_df.iloc[:, 0],
-            'matched_url': destination_df.iloc[:, 0].iloc[I.flatten()].apply(lambda x: x.split()[0]).values,  # Ensure only the URL is added
-            'similarity_score': np.round(similarity_scores.flatten(), 4),
-            'fallback_applied': ['No'] * len(origin_df)  # Default to 'No' for fallback
-        })
-
-        # Step 4: Apply Partial Match for Low Scores
-        fallback_threshold = 0.4
-        low_score_indices = matches_df['similarity_score'] < fallback_threshold
-        low_score_matches = matches_df[low_score_indices]
-
-        # Apply partial match using SequenceMatcher
+        # Step 4: Apply Partial Match First
         def get_partial_match_url(origin_url):
             highest_score = 0
             best_match = '/'
@@ -101,11 +70,44 @@ if uploaded_origin and uploaded_destination:
                     best_match = destination_url.split()[0]
             return best_match
 
-        matches_df.loc[low_score_indices, 'matched_url'] = low_score_matches['origin_url'].apply(get_partial_match_url)
-        matches_df.loc[low_score_indices, 'similarity_score'] = 'Partial Match'
-        matches_df.loc[low_score_indices, 'fallback_applied'] = 'Partial Match'
+        # Apply partial matches before calculating similarity scores
+        matches_df = pd.DataFrame({
+            'origin_url': origin_df.iloc[:, 0],
+            'matched_url': origin_df['combined_text'].apply(get_partial_match_url),
+            'similarity_score': ['Partial Match'] * len(origin_df),
+            'fallback_applied': ['Partial Match'] * len(origin_df)
+        })
 
-        # Step 5: Apply Fallbacks for Remaining Low Scores
+        # Step 5: Calculate Similarity Scores for URLs that still need it
+        unmatched_indices = matches_df['matched_url'] == '/'
+        if unmatched_indices.any():
+            # Use a pre-trained model for embedding
+            model = SentenceTransformer('all-MiniLM-L6-v2')
+
+            # Vectorize the combined text
+            origin_embeddings = model.encode(origin_df['combined_text'].tolist(), show_progress_bar=True)
+            destination_embeddings = model.encode(destination_df['combined_text'].tolist(), show_progress_bar=True)
+
+            # Create a FAISS index
+            dimension = origin_embeddings.shape[1]
+            faiss_index = faiss.IndexFlatL2(dimension)
+            faiss_index.add(destination_embeddings.astype('float32'))
+
+            # Perform the search for the nearest neighbors
+            D, I = faiss_index.search(origin_embeddings.astype('float32'), k=1)
+
+            # Calculate similarity scores
+            similarity_scores = 1 - (D / (np.max(D) + 1e-10))  # Add small value to avoid division by zero
+
+            # Update the DataFrame with similarity scores for unmatched URLs
+            matches_df.loc[unmatched_indices, 'matched_url'] = destination_df.iloc[I.flatten()].apply(lambda x: x.split()[0]).values
+            matches_df.loc[unmatched_indices, 'similarity_score'] = np.round(similarity_scores.flatten(), 4)
+            matches_df.loc[unmatched_indices, 'fallback_applied'] = 'No'
+
+        # Step 6: Apply Fallbacks for Remaining Low Scores
+        fallback_threshold = 0.6
+        low_score_indices = matches_df['similarity_score'].apply(lambda x: isinstance(x, float) and x < fallback_threshold)
+
         def get_fallback_url(origin_url):
             fallback_url = "/"  # Default fallback to homepage
             origin_url_normalized = origin_url.lower().strip().rstrip('/')
@@ -119,12 +121,11 @@ if uploaded_origin and uploaded_destination:
             
             return fallback_url
         
-        remaining_low_score_indices = matches_df['similarity_score'] == 'Partial Match'
-        matches_df.loc[remaining_low_score_indices, 'matched_url'] = low_score_matches['origin_url'].apply(get_fallback_url)
-        matches_df.loc[remaining_low_score_indices, 'similarity_score'] = 'Fallback'
-        matches_df.loc[remaining_low_score_indices, 'fallback_applied'] = 'Yes'
+        matches_df.loc[low_score_indices, 'matched_url'] = matches_df['origin_url'].apply(get_fallback_url)
+        matches_df.loc[low_score_indices, 'similarity_score'] = 'Fallback'
+        matches_df.loc[low_score_indices, 'fallback_applied'] = 'Yes'
 
-        # Step 6: Display and Download Results
+        # Step 7: Display and Download Results
         st.success("Matching complete! Download your results below.")
         st.write(matches_df)
 
