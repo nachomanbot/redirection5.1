@@ -1,0 +1,5 @@
+Keyword,Rule Type,Destination URL Pattern,Priority
+/blog/page/,Pagination,/blog,1
+/property/page/,Pagination,/properties/sale,1
+/about-us,Category,/about,2
+/team,Category,/team,2
