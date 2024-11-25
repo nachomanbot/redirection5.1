@@ -86,7 +86,7 @@ if uploaded_origin and uploaded_destination:
         })
 
         # Step 4: Apply Partial Match for Low Scores
-        fallback_threshold = 0.4
+        fallback_threshold = 0.6
         low_score_indices = matches_df['similarity_score'] < fallback_threshold
         low_score_matches = matches_df[low_score_indices]
 
@@ -103,7 +103,7 @@ if uploaded_origin and uploaded_destination:
 
         matches_df.loc[low_score_indices, 'matched_url'] = low_score_matches['origin_url'].apply(get_partial_match_url)
         matches_df.loc[low_score_indices, 'similarity_score'] = 'Partial Match'
-        matches_df.loc[low_score_indices, 'fallback_applied'] = 'Yes'
+        matches_df.loc[low_score_indices, 'fallback_applied'] = 'Partial Match'
 
         # Step 5: Apply Fallbacks for Remaining Low Scores
         def get_fallback_url(origin_url):
@@ -120,7 +120,7 @@ if uploaded_origin and uploaded_destination:
             return fallback_url
         
         remaining_low_score_indices = matches_df['similarity_score'] == 'Partial Match'
-        matches_df.loc[remaining_low_score_indices, 'matched_url'] = matches_df['origin_url'].apply(get_fallback_url)
+        matches_df.loc[remaining_low_score_indices, 'matched_url'] = low_score_matches['origin_url'].apply(get_fallback_url)
         matches_df.loc[remaining_low_score_indices, 'similarity_score'] = 'Fallback'
         matches_df.loc[remaining_low_score_indices, 'fallback_applied'] = 'Yes'
 
