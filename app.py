@@ -4,6 +4,8 @@ import numpy as np
 from sentence_transformers import SentenceTransformer
 import faiss
 import os
+import re
+from difflib import SequenceMatcher
 
 # Set the page title
 st.title("AI-Powered Redirect Mapping Tool - Version 2.0")
@@ -83,12 +85,27 @@ if uploaded_origin and uploaded_destination:
             'fallback_applied': ['No'] * len(origin_df)  # Default to 'No' for fallback
         })
 
-        # Step 4: Apply Fallbacks for Low Scores
+        # Step 4: Apply Partial Match for Low Scores
         fallback_threshold = 0.6
         low_score_indices = matches_df['similarity_score'] < fallback_threshold
         low_score_matches = matches_df[low_score_indices]
 
-        # Apply fallbacks using vectorized operations
+        # Apply partial match using SequenceMatcher
+        def get_partial_match_url(origin_url):
+            highest_score = 0
+            best_match = '/'
+            for destination_url in destination_df['combined_text']:
+                score = SequenceMatcher(None, origin_url.lower(), destination_url.lower()).ratio() * 100
+                if score > highest_score:
+                    highest_score = score
+                    best_match = destination_url.split()[0]
+            return best_match
+
+        matches_df.loc[low_score_indices, 'matched_url'] = low_score_matches['origin_url'].apply(get_partial_match_url)
+        matches_df.loc[low_score_indices, 'similarity_score'] = 'Partial Match'
+        matches_df.loc[low_score_indices, 'fallback_applied'] = 'Yes'
+
+        # Step 5: Apply Fallbacks for Remaining Low Scores
         def get_fallback_url(origin_url):
             fallback_url = "/"  # Default fallback to homepage
             origin_url_normalized = origin_url.lower().strip().rstrip('/')
@@ -102,11 +119,12 @@ if uploaded_origin and uploaded_destination:
             
             return fallback_url
         
-        matches_df.loc[low_score_indices, 'matched_url'] = low_score_matches['origin_url'].apply(get_fallback_url)
-        matches_df.loc[low_score_indices, 'similarity_score'] = 'Fallback'
-        matches_df.loc[low_score_indices, 'fallback_applied'] = 'Yes'
+        remaining_low_score_indices = matches_df['similarity_score'] == 'Partial Match'
+        matches_df.loc[remaining_low_score_indices, 'matched_url'] = low_score_matches['origin_url'].apply(get_fallback_url)
+        matches_df.loc[remaining_low_score_indices, 'similarity_score'] = 'Fallback'
+        matches_df.loc[remaining_low_score_indices, 'fallback_applied'] = 'Yes'
 
-        # Step 5: Display and Download Results
+        # Step 6: Display and Download Results
         st.success("Matching complete! Download your results below.")
         st.write(matches_df)
 
