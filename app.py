@@ -63,17 +63,17 @@ if uploaded_origin and uploaded_destination:
         def get_partial_match_url(origin_url):
             highest_score = 0
             best_match = '/'
-            for destination_url in destination_df['combined_text']:
+            for destination_url in destination_df['Address']:
                 score = SequenceMatcher(None, origin_url.lower(), destination_url.lower()).ratio() * 100
                 if score > highest_score:
                     highest_score = score
-                    best_match = destination_url.split()[0]
-            return best_match
+                    best_match = destination_url
+            return best_match if highest_score > 50 else '/'  # Apply partial match only if score > 50
 
         # Apply partial matches before calculating similarity scores
         matches_df = pd.DataFrame({
-            'origin_url': origin_df.iloc[:, 0],
-            'matched_url': origin_df['combined_text'].apply(get_partial_match_url),
+            'origin_url': origin_df['Address'],
+            'matched_url': origin_df['Address'].apply(get_partial_match_url),
             'similarity_score': ['Partial Match'] * len(origin_df),
             'fallback_applied': ['Partial Match'] * len(origin_df)
         })
@@ -100,8 +100,8 @@ if uploaded_origin and uploaded_destination:
             similarity_scores = 1 - (D / (np.max(D) + 1e-10))  # Add small value to avoid division by zero
 
             # Update the DataFrame with similarity scores for unmatched URLs
-            matches_df.loc[unmatched_indices, 'matched_url'] = destination_df.iloc[I.flatten()].apply(lambda x: x.split()[0]).values
-            matches_df.loc[unmatched_indices, 'similarity_score'] = np.round(similarity_scores.flatten(), 4)
+            matches_df.loc[unmatched_indices, 'matched_url'] = destination_df.iloc[I[unmatched_indices].flatten()]['Address'].values
+            matches_df.loc[unmatched_indices, 'similarity_score'] = np.round(similarity_scores[unmatched_indices].flatten(), 4)
             matches_df.loc[unmatched_indices, 'fallback_applied'] = 'No'
 
         # Step 6: Apply Fallbacks for Remaining Low Scores
