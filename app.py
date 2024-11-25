@@ -86,7 +86,7 @@ if uploaded_origin and uploaded_destination:
         })
 
         # Step 4: Apply Partial Match for Low Scores
-        fallback_threshold = 0.3
+        fallback_threshold = 0.4
         low_score_indices = matches_df['similarity_score'] < fallback_threshold
         low_score_matches = matches_df[low_score_indices]
 
