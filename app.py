@@ -55,6 +55,7 @@ if uploaded_origin and uploaded_destination:
     # Step 3: Button to Process Matching
     if st.button("Let's Go!"):
         st.info("Processing data... This may take a while.")
+        progress_bar = st.progress(0)
 
         # Use a pre-trained model for embedding
         model = SentenceTransformer('all-MiniLM-L6-v2')
@@ -84,26 +85,26 @@ if uploaded_origin and uploaded_destination:
 
         # Step 4: Apply Fallbacks for Low Scores
         fallback_threshold = 0.6
-        for idx, score in enumerate(matches_df['similarity_score']):
-            if isinstance(score, (float, int)) and score < fallback_threshold:
-                origin_url = matches_df.at[idx, 'origin_url']
-                fallback_url = "/"  # Default fallback to homepage
+        low_score_indices = matches_df['similarity_score'] < fallback_threshold
+        low_score_matches = matches_df[low_score_indices]
 
-                # Normalize the origin URL
-                origin_url_normalized = origin_url.lower().strip().rstrip('/')
-
-                # Apply CSV rules
-                applicable_rules = rules_df.sort_values(by='Priority')  # Sort rules by priority
-                for _, rule in applicable_rules.iterrows():
-                    keyword_normalized = rule['Keyword'].lower().strip().rstrip('/')
-                    if keyword_normalized in origin_url_normalized:
-                        fallback_url = rule['Destination URL Pattern']
-                        break
-
-                # Update the DataFrame with the fallback URL
-                matches_df.at[idx, 'matched_url'] = fallback_url
-                matches_df.at[idx, 'similarity_score'] = 'Fallback'
-                matches_df.at[idx, 'fallback_applied'] = 'Yes'
+        # Apply fallbacks using vectorized operations
+        def get_fallback_url(origin_url):
+            fallback_url = "/"  # Default fallback to homepage
+            origin_url_normalized = origin_url.lower().strip().rstrip('/')
+            
+            # Apply CSV rules
+            applicable_rules = rules_df.sort_values(by='Priority')  # Sort rules by priority
+            for _, rule in applicable_rules.iterrows():
+                keyword_normalized = rule['Keyword'].lower().strip().rstrip('/')
+                if keyword_normalized in origin_url_normalized:
+                    return rule['Destination URL Pattern']
+            
+            return fallback_url
+        
+        matches_df.loc[low_score_indices, 'matched_url'] = low_score_matches['origin_url'].apply(get_fallback_url)
+        matches_df.loc[low_score_indices, 'similarity_score'] = 'Fallback'
+        matches_df.loc[low_score_indices, 'fallback_applied'] = 'Yes'
 
         # Step 5: Display and Download Results
         st.success("Matching complete! Download your results below.")
