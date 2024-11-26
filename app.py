@@ -69,7 +69,7 @@ if uploaded_origin and uploaded_destination:
 
     # Step 3: User Customization Settings
     st.header("Settings")
-    prioritize_partial_match = st.selectbox("Prioritize Partial Match over Similarity Scores?", ["Yes", "No"], index=0)
+    prioritize_partial_match = st.checkbox("Prioritize Partial Match over Similarity Scores?", value=True)
     partial_match_threshold = st.slider("Partial Match Threshold (in %)", min_value=50, max_value=100, value=65, step=5)
     similarity_score_threshold = st.slider("Similarity Score Threshold (in %)", min_value=50, max_value=100, value=60, step=5)
 
@@ -90,7 +90,7 @@ if uploaded_origin and uploaded_destination:
                     best_match = destination_url
             return best_match if highest_score > partial_match_threshold else '/'
 
-        if prioritize_partial_match == "Yes":
+        if prioritize_partial_match:
             # Use ThreadPoolExecutor for parallel processing of partial matches
             with ThreadPoolExecutor() as executor:
                 partial_matches = list(executor.map(get_partial_match_url, origin_df['Address']))
