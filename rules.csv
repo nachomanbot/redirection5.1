@@ -12,7 +12,8 @@ Keyword,Rule Type,Destination URL Pattern,Priority
 /tag,Category,/blog,1
 /blog/,Category,/blog,1
 /uncategorized,Category,/blog,1
-/about-us,Category,/about,2
+/about-us,Category,/about,1
+/about,Category,/about,1
 /team,Category,/team,2
 /agent,Category,/team,2
 /staff,Category,/team,2
