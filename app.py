@@ -81,7 +81,7 @@ if uploaded_origin and uploaded_destination:
                 if score > highest_score:
                     highest_score = score
                     best_match = destination_url
-            return best_match if highest_score > 60 else '/'  # Apply partial match only if score > 60
+            return best_match if highest_score > 70 else '/'  # Apply partial match only if score > 70
 
         # Use ThreadPoolExecutor for parallel processing of partial matches
         with ThreadPoolExecutor() as executor:
@@ -153,7 +153,7 @@ if uploaded_origin and uploaded_destination:
         total_time = end_time - start_time
         avg_time_per_url = total_time / len(origin_df)
 
-        st.success(f"Matching complete in {total_time:.2f} seconds! Average processing time per URL: {avg_time_per_url:.2f} seconds.")
+        st.success(f"Matching complete in {total_time:.2f} seconds! Average processing time per URL: {avg_time_per_url:.2f} seconds. Total URLs processed: {len(origin_df)}.")
         st.write(matches_df)
 
         st.download_button(
