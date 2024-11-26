@@ -69,8 +69,8 @@ if uploaded_origin and uploaded_destination:
 
     # Step 3: User Customization Settings
     st.header("Settings")
-    prioritize_partial_match = st.selectbox("Prioritize Partial Match over Similarity Scores?", ["Yes", "No"], index=1)
-    partial_match_threshold = st.slider("Partial Match Threshold (in %)", min_value=50, max_value=100, value=70, step=5)
+    prioritize_partial_match = st.selectbox("Prioritize Partial Match over Similarity Scores?", ["Yes", "No"], index=0)
+    partial_match_threshold = st.slider("Partial Match Threshold (in %)", min_value=50, max_value=100, value=65, step=5)
     similarity_score_threshold = st.slider("Similarity Score Threshold (in %)", min_value=50, max_value=100, value=60, step=5)
 
     # Step 4: Button to Process Matching
@@ -149,7 +149,8 @@ if uploaded_origin and uploaded_destination:
             for _, rule in applicable_rules.iterrows():
                 keyword_normalized = rule['Keyword'].lower().strip().rstrip('/')
                 if keyword_normalized in origin_url_normalized:
-                    return rule['Destination URL Pattern']
+                    if rule['Destination URL Pattern'] in destination_df['Address'].values:
+                        return rule['Destination URL Pattern']
             
             return fallback_url
         
@@ -161,7 +162,7 @@ if uploaded_origin and uploaded_destination:
         homepage_indices = matches_df['origin_url'].str.lower().str.strip().isin(['/', 'index.html', 'index.php', 'index.asp'])
         matches_df.loc[homepage_indices, 'matched_url'] = '/'
         matches_df.loc[homepage_indices, 'similarity_score'] = 'Homepage'
-        matches_df.loc[homepage_indices, 'fallback_applied'] = 'Yes'
+        matches_df.loc[homepage_indices, 'fallback_applied'] = 'Last Resort'
 
         # Step 9: Display and Download Results
         end_time = time.time()
