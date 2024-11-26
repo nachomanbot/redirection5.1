@@ -54,10 +54,6 @@ if uploaded_origin and uploaded_destination:
     origin_df.columns = origin_df.columns.str.replace('ï»¿', '').str.strip()
     destination_df.columns = destination_df.columns.str.replace('ï»¿', '').str.strip()
 
-    # Debug: Print column names to verify headers
-    st.write("Origin file columns:", origin_df.columns.tolist())
-    st.write("Destination file columns:", destination_df.columns.tolist())
-
     # Check for required columns (use the first column if "Address" is not found)
     if 'Address' not in origin_df.columns:
         origin_df.rename(columns={origin_df.columns[0]: 'Address'}, inplace=True)
