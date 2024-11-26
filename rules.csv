@@ -1,33 +1,37 @@
 Keyword,Rule Type,Destination URL Pattern,Priority
 /blog/page/,Pagination,/blog,1
 /author,Category,/blog,1
-/properties,Category,/properties/sale,1
-/property/page/,Pagination,/properties/sale,1
-/property,Category,/properties/sale,1
-/homes-for-sale,Category,/properties/sale,1
-/listing,Category,/properties/sale,1
-/rent,Category,/properties/sale,1
-/idx,Category,/properties/sale,1
+/properties,Category,/properties/sale | /properties,1
+/property/page/,Pagination,/properties/sale | /properties,1
+/property,Category,/properties/sale | /properties,1
+/homes-for-sale,Category,/properties/sale | /properties,1
+/listing,Category,/properties/sale | /properties,1
+/rent,Category,/properties/sale | /properties,1
+/idx,Category,/properties/sale | /properties,1
 /category,Category,/blog,1
 /tag,Category,/blog,1
 /blog/,Category,/blog,1
 /uncategorized,Category,/blog,1
-/about-us,Category,/about,1
-/about,Category,/about,1
-/team,Category,/team,2
-/agent,Category,/team,2
-/staff,Category,/team,2
-/people,Category,/team,2
+/about-us,Category,/about | /about-us,1
+/about,Category,/about | /about-us,1
+/team,Category,/team | /about | /about-us,2
+/our-team,Category,/team | /about | /about-us,
+/agent,Category,/team | /about | /about-us,2
+/staff,Category,/team | /about | /about-us,2
+/people,Category,/team | /about | /about-us,2
 /contact,Category,/contact,2
 /testimonials,Category,/testimonials,2
 /clients-say,Category,/testimonials,2
 /what-our-clients-say,Category,/testimonials,2
-/privacy,Category,/privacy-policy,2
-/terms,Category,/privacy-policy,2
-/disclaimer,Category,/dmca-notice,2
+/privacy,Category,/privacy-policy | /terms-and-conditions,2
+/privacy-policy,Category,/privacy-policy | /terms-and-conditions,2
+/terms,Category,/privacy-policy | /terms-and-conditions,2
+/disclaimer,Category,/dmca-notice | /privacy-policy | /terms-and-conditions,2
 /home-valuation,Category,/home-valuation,2
-/communities,Category,/neighborhoods,2
-/neighborhoods,Category,/neighborhoods,2
+/communities,Category,/neighborhoods | /communities,2
+/state,Category,/neighborhoods | /communities,2
+/city,Category,/neighborhoods | /communities,2
+/neighborhoods,Category,/neighborhoods | /communities,2
 /development,Category,/developments,2
 /new-development,Category,/developments,2
 /sell,Category,/properties/sale,3
