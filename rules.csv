@@ -15,7 +15,7 @@ Keyword,Rule Type,Destination URL Pattern,Priority
 /about-us,Category,/about | /about-us,1
 /about,Category,/about | /about-us,1
 /team,Category,/team | /about | /about-us,2
-/our-team,Category,/team | /about | /about-us,
+/our-team,Category,/team | /about | /about-us,2
 /agent,Category,/team | /about | /about-us,2
 /staff,Category,/team | /about | /about-us,2
 /people,Category,/team | /about | /about-us,2
