@@ -8,7 +8,10 @@ Keyword,Rule Type,Destination URL Pattern,Priority
 /listing,Category,/properties/sale,1
 /rent,Category,/properties/sale,1
 /idx,Category,/properties/sale,1
+/category,Category,/blog,1
+/tag,Category,/blog,1
 /blog/,Category,/blog,1
+/uncategorized,Category,/blog,1
 /about-us,Category,/about,2
 /team,Category,/team,2
 /agent,Category,/team,2
