@@ -73,6 +73,16 @@ if uploaded_origin and uploaded_destination:
     partial_match_threshold = st.slider("Partial Match Threshold (in %)", min_value=50, max_value=100, value=65, step=5)
     similarity_score_threshold = st.slider("Similarity Score Threshold (in %)", min_value=50, max_value=100, value=60, step=5)
 
+    # Add toggle switch for prioritization
+    prioritize_partial_match_toggle = st.radio(
+        "Prioritize Matching Method:",
+        ("Partial Match", "Similarity Score"),
+        index=0,
+        help="Choose whether to prioritize partial matches (suitable for sites with meaningful URLs) or similarity scores (suitable for sites with optimized titles, descriptions, and headlines)."
+    )
+
+    prioritize_partial_match = prioritize_partial_match_toggle == "Partial Match"
+
     # Step 4: Button to Process Matching
     if st.button("Let's Go!"):
         start_time = time.time()
