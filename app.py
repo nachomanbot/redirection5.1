@@ -50,6 +50,13 @@ if uploaded_origin and uploaded_destination:
         st.error("Error reading CSV files. Please ensure they are saved in a supported encoding (UTF-8 or ISO-8859-1).")
         st.stop()
 
+    # Check for required columns
+    required_columns = ['Address']
+    for col in required_columns:
+        if col not in origin_df.columns or col not in destination_df.columns:
+            st.error(f"Missing required column: {col}. Please ensure your files have the correct headers.")
+            st.stop()
+
     # Combine all columns for similarity matching
     origin_df['combined_text'] = origin_df.fillna('').apply(lambda x: ' '.join(x.astype(str)), axis=1)
     destination_df['combined_text'] = destination_df.fillna('').apply(lambda x: ' '.join(x.astype(str)), axis=1)
