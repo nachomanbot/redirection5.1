@@ -10,7 +10,7 @@ from concurrent.futures import ThreadPoolExecutor
 import time
 
 # Set the page title
-st.title("AI-Powered Redirect Mapping Tool - Version 3.0")
+st.title("AI-Powered Redirect Mapping Tool - Version 4.0")
 
 st.markdown("""
 
@@ -24,8 +24,9 @@ This tool automates redirect mappings during site migrations by matching URLs fr
 ⚡ **How to Use It:**  
 1. Upload `origin.csv` and `destination.csv` files. Ensure that your files have the following headers: Address,Title 1,Meta Description 1,H1-1.
 2. Ensure that you remove any duplicates, and the http status of all URLs is 200. For best results, use relative URLs.
-3. Click **"Let's Go!"** to initiate the matching process.
-4. Download the resulting `output.csv` file containing matched URLs with similarity scores or fallback rules.
+3. Customize the settings below to fit your use case.
+4. Click **"Let's Go!"** to initiate the matching process.
+5. Download the resulting `output.csv` file containing matched URLs with similarity scores or fallback rules.
 """)
 
 # Step 1: Upload Files
@@ -66,13 +67,19 @@ if uploaded_origin and uploaded_destination:
     origin_df['combined_text'] = origin_df.fillna('').apply(lambda x: ' '.join(x.astype(str)), axis=1)
     destination_df['combined_text'] = destination_df.fillna('').apply(lambda x: ' '.join(x.astype(str)), axis=1)
 
-    # Step 3: Button to Process Matching
+    # Step 3: User Customization Settings
+    st.header("Settings")
+    prioritize_partial_match = st.selectbox("Prioritize Partial Match over Similarity Scores?", ["Yes", "No"], index=1)
+    partial_match_threshold = st.slider("Partial Match Threshold (in %)", min_value=50, max_value=100, value=70, step=5)
+    similarity_score_threshold = st.slider("Similarity Score Threshold (in %)", min_value=50, max_value=100, value=60, step=5)
+
+    # Step 4: Button to Process Matching
     if st.button("Let's Go!"):
         start_time = time.time()
         st.info("Processing data... This may take a while.")
         progress_bar = st.progress(0)
 
-        # Step 4: Apply Partial Match First
+        # Step 5: Apply Partial Match First if Prioritized
         def get_partial_match_url(origin_url):
             highest_score = 0
             best_match = '/'
@@ -81,21 +88,30 @@ if uploaded_origin and uploaded_destination:
                 if score > highest_score:
                     highest_score = score
                     best_match = destination_url
-            return best_match if highest_score > 70 else '/'  # Apply partial match only if score > 70
+            return best_match if highest_score > partial_match_threshold else '/'
 
-        # Use ThreadPoolExecutor for parallel processing of partial matches
-        with ThreadPoolExecutor() as executor:
-            partial_matches = list(executor.map(get_partial_match_url, origin_df['Address']))
+        if prioritize_partial_match == "Yes":
+            # Use ThreadPoolExecutor for parallel processing of partial matches
+            with ThreadPoolExecutor() as executor:
+                partial_matches = list(executor.map(get_partial_match_url, origin_df['Address']))
 
-        # Apply partial matches before calculating similarity scores
-        matches_df = pd.DataFrame({
-            'origin_url': origin_df['Address'],
-            'matched_url': partial_matches,
-            'similarity_score': ['Partial Match'] * len(origin_df),
-            'fallback_applied': ['Partial Match'] * len(origin_df)
-        })
+            # Apply partial matches before calculating similarity scores
+            matches_df = pd.DataFrame({
+                'origin_url': origin_df['Address'],
+                'matched_url': partial_matches,
+                'similarity_score': ['Partial Match'] * len(origin_df),
+                'fallback_applied': ['Partial Match'] * len(origin_df)
+            })
+        else:
+            # Initialize matches_df without partial matches
+            matches_df = pd.DataFrame({
+                'origin_url': origin_df['Address'],
+                'matched_url': ['/'] * len(origin_df),
+                'similarity_score': [''] * len(origin_df),
+                'fallback_applied': ['No'] * len(origin_df)
+            })
 
-        # Step 5: Calculate Similarity Scores for URLs that still need it
+        # Step 6: Calculate Similarity Scores for URLs that still need it
         unmatched_indices = matches_df['matched_url'] == '/'
         if unmatched_indices.any():
             # Use a pre-trained model for embedding
@@ -118,12 +134,11 @@ if uploaded_origin and uploaded_destination:
 
             # Update the DataFrame with similarity scores for unmatched URLs
             matches_df.loc[unmatched_indices, 'matched_url'] = destination_df.iloc[I[unmatched_indices].flatten()]['Address'].values
-            matches_df.loc[unmatched_indices, 'similarity_score'] = np.round(similarity_scores[unmatched_indices].flatten(), 4)
+            matches_df.loc[unmatched_indices, 'similarity_score'] = np.round(similarity_scores[unmatched_indices].flatten() * 100, 2)
             matches_df.loc[unmatched_indices, 'fallback_applied'] = 'No'
 
-        # Step 6: Apply Fallbacks for Remaining Low Scores
-        fallback_threshold = 0.6
-        low_score_indices = matches_df['similarity_score'].apply(lambda x: isinstance(x, float) and x < fallback_threshold)
+        # Step 7: Apply Fallbacks for Remaining Low Scores
+        low_score_indices = matches_df['similarity_score'].apply(lambda x: isinstance(x, float) and x < similarity_score_threshold)
 
         def get_fallback_url(origin_url):
             fallback_url = "/"  # Default fallback to homepage
@@ -142,13 +157,13 @@ if uploaded_origin and uploaded_destination:
         matches_df.loc[low_score_indices, 'similarity_score'] = 'Fallback'
         matches_df.loc[low_score_indices, 'fallback_applied'] = 'Yes'
 
-        # Step 7: Final Check for Homepage Redirection
+        # Step 8: Final Check for Homepage Redirection
         homepage_indices = matches_df['origin_url'].str.lower().str.strip().isin(['/', 'index.html', 'index.php', 'index.asp'])
         matches_df.loc[homepage_indices, 'matched_url'] = '/'
         matches_df.loc[homepage_indices, 'similarity_score'] = 'Homepage'
         matches_df.loc[homepage_indices, 'fallback_applied'] = 'Yes'
 
-        # Step 8: Display and Download Results
+        # Step 9: Display and Download Results
         end_time = time.time()
         total_time = end_time - start_time
         avg_time_per_url = total_time / len(origin_df)
@@ -159,6 +174,6 @@ if uploaded_origin and uploaded_destination:
         st.download_button(
             label="Download Results as CSV",
             data=matches_df.to_csv(index=False),
-            file_name="redirect_mapping_output_v3.csv",
+            file_name="redirect_mapping_output_v4.csv",
             mime="text/csv",
         )
