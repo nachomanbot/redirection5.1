@@ -79,7 +79,7 @@ if uploaded_origin and uploaded_destination:
                 if score > highest_score:
                     highest_score = score
                     best_match = destination_url
-            return best_match if highest_score > 50 else '/'  # Apply partial match only if score > 50
+            return best_match if highest_score > 60 else '/'  # Apply partial match only if score > 60
 
         # Use ThreadPoolExecutor for parallel processing of partial matches
         with ThreadPoolExecutor() as executor:
