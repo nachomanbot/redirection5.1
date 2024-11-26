@@ -21,7 +21,7 @@ This tool automates redirect mappings during site migrations by matching URLs fr
 
 ⚡ **How to Use It:**  
 1. Upload `origin.csv` and `destination.csv` files. Ensure that your files have the following headers: Address,Title 1,Meta Description 1,H1-1.
-2. Ensure that you remove any duplicates and the http status of all URLs is 200.
+2. Ensure that you remove any duplicates, and the http status of all URLs is 200. For best results, use relative URLs.
 3. Click **"Let's Go!"** to initiate the matching process.
 4. Download the resulting `output.csv` file containing matched URLs with similarity scores or fallback rules.
 """)
