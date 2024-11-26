@@ -50,6 +50,10 @@ if uploaded_origin and uploaded_destination:
         st.error("Error reading CSV files. Please ensure they are saved in a supported encoding (UTF-8 or ISO-8859-1).")
         st.stop()
 
+    # Debug: Print column names to verify headers
+    st.write("Origin file columns:", origin_df.columns.tolist())
+    st.write("Destination file columns:", destination_df.columns.tolist())
+
     # Check for required columns
     required_columns = ['Address']
     for col in required_columns:
