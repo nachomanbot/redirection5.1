@@ -140,7 +140,13 @@ if uploaded_origin and uploaded_destination:
         matches_df.loc[low_score_indices, 'similarity_score'] = 'Fallback'
         matches_df.loc[low_score_indices, 'fallback_applied'] = 'Yes'
 
-        # Step 7: Display and Download Results
+        # Step 7: Final Check for Homepage Redirection
+        homepage_indices = matches_df['origin_url'].str.lower().str.strip().isin(['/', 'index.html', 'index.php', 'index.asp'])
+        matches_df.loc[homepage_indices, 'matched_url'] = '/'
+        matches_df.loc[homepage_indices, 'similarity_score'] = 'Homepage'
+        matches_df.loc[homepage_indices, 'fallback_applied'] = 'Yes'
+
+        # Step 8: Display and Download Results
         st.success("Matching complete! Download your results below.")
         st.write(matches_df)
 
