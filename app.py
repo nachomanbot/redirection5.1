@@ -91,6 +91,8 @@ if uploaded_origin and uploaded_destination:
             highest_score = 0
             best_match = '/'
             for destination_url in destination_df['Address']:
+                if not isinstance(origin_url, str) or not isinstance(destination_url, str):
+                    continue
                 score = SequenceMatcher(None, origin_url.lower(), destination_url.lower()).ratio() * 100
                 if score > highest_score:
                     highest_score = score
@@ -156,8 +158,10 @@ if uploaded_origin and uploaded_destination:
             for _, rule in applicable_rules.iterrows():
                 keyword_normalized = rule['Keyword'].lower().strip().rstrip('/')
                 if keyword_normalized in origin_url_normalized:
-                    if rule['Destination URL Pattern'] in destination_df['Address'].values:
-                        return rule['Destination URL Pattern']
+                    destination_patterns = rule['Destination URL Pattern'].split('|')
+                    for pattern in destination_patterns:
+                        if pattern.strip() in destination_df['Address'].values:
+                            return pattern.strip()
             
             return fallback_url
         
