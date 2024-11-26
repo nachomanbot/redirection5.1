@@ -7,6 +7,7 @@ import os
 import re
 from difflib import SequenceMatcher
 from concurrent.futures import ThreadPoolExecutor
+import time
 
 # Set the page title
 st.title("AI-Powered Redirect Mapping Tool - Version 3.0")
@@ -67,6 +68,7 @@ if uploaded_origin and uploaded_destination:
 
     # Step 3: Button to Process Matching
     if st.button("Let's Go!"):
+        start_time = time.time()
         st.info("Processing data... This may take a while.")
         progress_bar = st.progress(0)
 
@@ -147,7 +149,11 @@ if uploaded_origin and uploaded_destination:
         matches_df.loc[homepage_indices, 'fallback_applied'] = 'Yes'
 
         # Step 8: Display and Download Results
-        st.success("Matching complete! Download your results below.")
+        end_time = time.time()
+        total_time = end_time - start_time
+        avg_time_per_url = total_time / len(origin_df)
+
+        st.success(f"Matching complete in {total_time:.2f} seconds! Average processing time per URL: {avg_time_per_url:.2f} seconds.")
         st.write(matches_df)
 
         st.download_button(
