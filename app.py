@@ -50,16 +50,19 @@ if uploaded_origin and uploaded_destination:
         st.error("Error reading CSV files. Please ensure they are saved in a supported encoding (UTF-8 or ISO-8859-1).")
         st.stop()
 
+    # Remove BOM and strip whitespace from column names
+    origin_df.columns = origin_df.columns.str.replace('ï»¿', '').str.strip()
+    destination_df.columns = destination_df.columns.str.replace('ï»¿', '').str.strip()
+
     # Debug: Print column names to verify headers
     st.write("Origin file columns:", origin_df.columns.tolist())
     st.write("Destination file columns:", destination_df.columns.tolist())
 
-    # Check for required columns
-    required_columns = ['Address']
-    for col in required_columns:
-        if col not in origin_df.columns or col not in destination_df.columns:
-            st.error(f"Missing required column: {col}. Please ensure your files have the correct headers.")
-            st.stop()
+    # Check for required columns (use the first column if "Address" is not found)
+    if 'Address' not in origin_df.columns:
+        origin_df.rename(columns={origin_df.columns[0]: 'Address'}, inplace=True)
+    if 'Address' not in destination_df.columns:
+        destination_df.rename(columns={destination_df.columns[0]: 'Address'}, inplace=True)
 
     # Combine all columns for similarity matching
     origin_df['combined_text'] = origin_df.fillna('').apply(lambda x: ' '.join(x.astype(str)), axis=1)
