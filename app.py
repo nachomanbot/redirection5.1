@@ -6,6 +6,7 @@ import faiss
 import os
 import re
 from difflib import SequenceMatcher
+from concurrent.futures import ThreadPoolExecutor
 
 # Set the page title
 st.title("AI-Powered Redirect Mapping Tool - Version 3.0")
@@ -80,10 +81,14 @@ if uploaded_origin and uploaded_destination:
                     best_match = destination_url
             return best_match if highest_score > 50 else '/'  # Apply partial match only if score > 50
 
+        # Use ThreadPoolExecutor for parallel processing of partial matches
+        with ThreadPoolExecutor() as executor:
+            partial_matches = list(executor.map(get_partial_match_url, origin_df['Address']))
+
         # Apply partial matches before calculating similarity scores
         matches_df = pd.DataFrame({
             'origin_url': origin_df['Address'],
-            'matched_url': origin_df['Address'].apply(get_partial_match_url),
+            'matched_url': partial_matches,
             'similarity_score': ['Partial Match'] * len(origin_df),
             'fallback_applied': ['Partial Match'] * len(origin_df)
         })
