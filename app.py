@@ -69,11 +69,6 @@ if uploaded_origin and uploaded_destination:
 
     # Step 3: User Customization Settings
     st.header("Settings")
-    prioritize_partial_match = st.checkbox("Prioritize Partial Match over Similarity Scores?", value=True)
-    partial_match_threshold = st.slider("Partial Match Threshold (in %)", min_value=50, max_value=100, value=65, step=5)
-    similarity_score_threshold = st.slider("Similarity Score Threshold (in %)", min_value=50, max_value=100, value=60, step=5)
-
-    # Add toggle switch for prioritization
     prioritize_partial_match_toggle = st.radio(
         "Prioritize Matching Method:",
         ("Partial Match", "Similarity Score"),
@@ -82,6 +77,8 @@ if uploaded_origin and uploaded_destination:
     )
 
     prioritize_partial_match = prioritize_partial_match_toggle == "Partial Match"
+    partial_match_threshold = st.slider("Partial Match Threshold (in %)", min_value=50, max_value=100, value=65, step=5)
+    similarity_score_threshold = st.slider("Similarity Score Threshold (in %)", min_value=50, max_value=100, value=60, step=5)
 
     # Step 4: Button to Process Matching
     if st.button("Let's Go!"):
