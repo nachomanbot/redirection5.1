@@ -10,7 +10,7 @@ from concurrent.futures import ThreadPoolExecutor
 import time
 
 # Set the page title
-st.title("AI-Powered Redirect Mapping Tool - Version 5.0")
+st.title("AI-Powered Redirect Mapping Tool - Version 4.0")
 
 st.markdown("""
 
