@@ -6,7 +6,6 @@ import faiss
 import os
 import re
 from difflib import SequenceMatcher
-from concurrent.futures import ThreadPoolExecutor
 import time
 
 # Set the page title
@@ -106,9 +105,10 @@ if uploaded_origin and uploaded_destination:
             return best_match if highest_score > partial_match_threshold else '/'
 
         if prioritize_partial_match:
-            # Use ThreadPoolExecutor for parallel processing of partial matches
-            with ThreadPoolExecutor() as executor:
-                partial_matches = list(executor.map(get_partial_match_url, origin_df['Address']))
+            # Process partial matches without threading
+            partial_matches = []
+            for origin_url in origin_df['Address']:
+                partial_matches.append(get_partial_match_url(origin_url))
 
             # Apply partial matches before calculating similarity scores
             matches_df = pd.DataFrame({
