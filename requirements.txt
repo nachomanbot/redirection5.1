@@ -3,3 +3,4 @@ pandas
 numpy
 sentence-transformers
 faiss-cpu
+rapidfuzz==3.6.1
